@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trip Fuel Calculator</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f0f4f8;
+      color: #333;
+    }
+    body.dark {
+      background: #111;
+      color: #eee;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    body.dark .container {
+      background: #222;
+    }
+    h2 { text-align: center; margin-bottom: 20px; }
+    label { display: block; margin: 10px 0 5px; }
+    input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+    button { margin-top: 10px; width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+    button:hover { background-color: #0056b3; }
+    #controls { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+    #controls button { flex: 1; }
+    #result, #monthlyEstimate { margin-top: 20px; font-size: 18px; }
+    .trip-history { margin-top: 30px; background: #f9f9f9; padding: 15px; border-radius: 8px; }
+    body.dark .trip-history { background: #333; }
+    .lang-toggle { margin-top: 15px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 data-en="Trip Fuel Calculator" data-hi="यात्रा ईंधन कैलकुलेटर" data-gu="યાત્રા ઇંધણ કેલ્ક્યુલેટર">Trip Fuel Calculator</h2>
+    <form id="fuelForm">
+      <label for="distance" data-en="Distance Travelled (km):" data-hi="दूरी (कि.मी.):" data-gu="અંતર કાપ્યું (કિમી):">Distance Travelled (km):</label>
+      <input type="number" id="distance" required>
+
+      <label for="mileage" data-en="Mileage (km/liter):" data-hi="माइलेज (कि.मी./ली.):" data-gu="માઇલેજ (કિમી/લીટર):">Mileage (km/liter):</label>
+      <input type="number" id="mileage" required>
+
+      <label for="price" data-en="Fuel Price (₹/liter):" data-hi="ईंधन मूल्य (₹/ली.):" data-gu="ઇંધણ કિંમત (₹/લી.):">Fuel Price (₹/liter):</label>
+      <input type="number" id="price" required>
+
+      <button type="submit" data-en="Calculate" data-hi="गणना करें" data-gu="ગણતરી કરો">Calculate</button>
+    </form>
+
+    <div id="controls">
+      <button onclick="resetHistory()" data-en="Reset History" data-hi="इतिहास रीसेट करें" data-gu="ઇતિહાસ રીસેટ કરો">Reset History</button>
+      <button onclick="exportCSV()" data-en="Export CSV" data-hi="CSV निर्यात करें" data-gu="CSV નિકાસ કરો">Export CSV</button>
+      <button onclick="toggleMonthlyEstimate()" id="toggleMonthlyBtn" data-en="Enable Monthly Estimate" data-hi="मासिक अनुमान सक्षम करें" data-gu="માસિક અંદાજ ચાલુ કરો">Enable Monthly Estimate</button>
+    </div>
+
+    <div id="result"></div>
+    <div id="monthlyEstimate"></div>
+
+    <div class="trip-history">
+      <h3 data-en="Trip History" data-hi="यात्रा इतिहास" data-gu="યાત્રા ઇતિહાસ">Trip History</h3>
+      <ul id="historyList"></ul>
+    </div>
+
+    <div id="controls">
+      <button onclick="toggleTheme()" data-en="Toggle Light/Dark Theme" data-hi="थीम बदलें" data-gu="થીમ બદલો">Toggle Light/Dark Theme</button>
+      <button onclick="toggleLanguage()" data-en="Toggle Language" data-hi="भाषा बदलें" data-gu="ભાષા બદલો">Toggle Language</button>
+    </div>
+  </div>
+
+  <script>
+    const languages = ['en', 'hi', 'gu'];
+    let langIndex = 0;
+
+    function toggleLanguage() {
+      langIndex = (langIndex + 1) % languages.length;
+      const lang = languages[langIndex];
+      document.querySelectorAll('[data-en]').forEach(el => {
+        el.textContent = el.getAttribute(`data-${lang}`);
+      });
+    }
+
+    let monthlyEnabled = false;
+    function toggleMonthlyEstimate() {
+      monthlyEnabled = !monthlyEnabled;
+      const btn = document.getElementById('toggleMonthlyBtn');
+      btn.textContent = monthlyEnabled ? btn.getAttribute(`data-${languages[langIndex]}`)?.replace("Enable", "Disable") : btn.getAttribute(`data-${languages[langIndex]}`);
+      if (!monthlyEnabled) document.getElementById("monthlyEstimate").innerHTML = '';
+    }
+
+    const form = document.getElementById("fuelForm");
+    const resultDiv = document.getElementById("result");
+    const monthlyDiv = document.getElementById("monthlyEstimate");
+    const historyList = document.getElementById("historyList");
+
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const distance = parseFloat(document.getElementById("distance").value);
+      const mileage = parseFloat(document.getElementById("mileage").value);
+      const price = parseFloat(document.getElementById("price").value);
+
+      if (mileage > 0 && distance > 0) {
+        const fuel = distance / mileage;
+        const cost = fuel * price;
+        const summary = `Mileage: ${mileage.toFixed(2)} km/l, Cost: ₹${cost.toFixed(2)}`;
+        resultDiv.innerHTML = `<p><strong>Fuel Needed:</strong> ${fuel.toFixed(2)} L</p><p><strong>Total Fuel Cost:</strong> ₹${cost.toFixed(2)}</p><button onclick="shareResult('${summary}')">Share</button>`;
+
+        const trip = { distance, fuel: fuel.toFixed(2), price, mileage: mileage.toFixed(2), cost: cost.toFixed(2)};
+        const history = JSON.parse(localStorage.getItem("tripHistory")) || [];
+        history.push(trip);
+        localStorage.setItem("tripHistory", JSON.stringify(history));
+        renderHistory();
+        if (monthlyEnabled) updateMonthly();
+      } else {
+        resultDiv.textContent = 'Please enter valid values.';
+        monthlyDiv.textContent = '';
+      }
+    });
+
+    function renderHistory() {
+      const history = JSON.parse(localStorage.getItem("tripHistory")) || [];
+      historyList.innerHTML = '';
+      history.forEach((t, i) => {
+        const li = document.createElement('li');
+        li.textContent = `Trip ${i+1}: ${t.distance}km, ${t.fuel}L @₹${t.price}/L → ${t.mileage} km/l, ₹${t.cost}`;
+        historyList.appendChild(li);
+      });
+    }
+
+    function updateMonthly() {
+      const history = JSON.parse(localStorage.getItem("tripHistory")) || [];
+      if (!history.length) return monthlyDiv.textContent = '';
+      const avgCost = history.reduce((sum,t)=> sum+parseFloat(t.cost),0)/history.length;
+      const estimate = avgCost * 30;
+      monthlyDiv.innerHTML = `<h3>Estimated Monthly Fuel Cost:</h3><p>₹${estimate.toFixed(2)} (1 trip/day)</p>`;
+    }
+
+    function resetHistory() {
+      localStorage.removeItem("tripHistory");
+      renderHistory(); monthlyDiv.textContent = ''; resultDiv.textContent = '';
+    }
+
+    function exportCSV() {
+      const history = JSON.parse(localStorage.getItem("tripHistory")) || [];
+      if (!history.length) return;
+      let csv = 'Distance (km),Fuel (L),Mileage (km/l),Price (₹/L),Cost (₹)\n';
+      history.forEach(t=> csv+=`${t.distance},${t.fuel},${t.mileage},${t.price},${t.cost}\n`);
+      const blob = new Blob([csv],{type:'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'trip_history.csv'; a.click();
+    }
+
+    function shareResult(text) {
+      window.open(`https://wa.me/?text=${encodeURIComponent('Check this out: '+text)}`,'_blank');
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('dark');
+    }
+
+    renderHistory(); toggleLanguage();
+
+    if ('serviceWorker' in navigator) {
+      const swCode = `self.addEventListener('install',e=>{e.waitUntil(caches.open('v1').then(c=>c.addAll(['/','/index.html'])))});
+        self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))});`;
+      const blob = new Blob([swCode],{type:'text/javascript'});
+      navigator.serviceWorker.register(URL.createObjectURL(blob));
+    }
+  </script>
+</body>
+</html>
