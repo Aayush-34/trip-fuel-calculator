@@ -40,6 +40,14 @@
     .lang-toggle { margin-top: 15px; text-align: center; }
   </style>
 </head>
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(() => console.log("✅ Service Worker Registered"))
+      .catch(error => console.error("❌ SW Registration Failed", error));
+  }
+</script>
+
 <body>
   <div class="container">
     <h2 data-en="Trip Fuel Calculator" data-hi="यात्रा ईंधन कैलकुलेटर" data-gu="યાત્રા ઇંધણ કેલ્ક્યુલેટર">Trip Fuel Calculator</h2>
