@@ -2,7 +2,7 @@
   "name": "Trip Fuel Calculator",
   "short_name": "FuelCalc",
   "description": "Calculate your trip's fuel cost, mileage, and monthly estimates.",
-  "start_url": "./Trip/index.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f0f4f8",
   "theme_color": "#007bff",
